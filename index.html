@@ -3,83 +3,755 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>META‑Index – U/Q/T/H/B</title>
+<title>MASTER-PI · META-INDEX · ACTIVE AUTO 3.0</title>
 
 <style>
-body { font-family: Arial; background:#0b0b0b; color:#e6e6e6; padding:20px; }
-h1 { color:#4cc3ff; }
-h2 { color:#6cf; margin-top:30px; }
-a { color:#4cc3ff; text-decoration:none; }
-a:hover { text-decoration:underline; }
-ul { list-style:none; padding:0; }
-li { padding:4px 0; border-bottom:1px solid #333; }
+:root {
+    --bg: #0a0a0f;
+    --fg: #0f0;
+    --gold: #ffd700;
+    --meta: #6b6bff;
+    --fix: #ff6b6b;
+    --nc: #4f4;
+    --opta: #ffd93d;
+    --ultra: #ff44ff;
+    --root: #6cf;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Consolas', monospace;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 6px;
+    padding: 10px;
+    overflow: hidden;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+header h1 {
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: 2px;
+}
+header h1 .master { color: var(--ultra); }
+header h1 .meta { color: var(--meta); }
+header h1 .auto { color: var(--opta); }
+#info-bar { font-size: 9px; color: #666; display: flex; gap: 8px; align-items: center; }
+
+main {
+    display: grid;
+    grid-template-columns: 3fr 1.2fr;
+    gap: 6px;
+    height: 100%;
+    min-height: 0;
+}
+
+#canvas-wrap {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 10px;
+    padding: 6px;
+    position: relative;
+    overflow: hidden;
+}
+#canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    display: block;
+}
+#canvas-overlay {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    font-size: 7px;
+    color: #444;
+    pointer-events: none;
+    background: rgba(0,0,0,0.7);
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+#canvas-overlay .master { color: var(--gold); }
+
+#panel {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 10px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow-y: auto;
+    max-height: 100%;
+}
+#panel h3 { font-size: 9px; color: #666; border-bottom: 1px solid #1a1a2a; padding-bottom: 3px; }
+
+#layers {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3px;
+}
+.layer {
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    padding: 4px 6px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.layer:hover {
+    border-color: var(--gold);
+    background: rgba(255,215,61,0.05);
+}
+.layer .sym { font-size: 14px; display: block; }
+.layer .label { color: #666; font-size: 5px; text-transform: uppercase; letter-spacing: 1px; }
+.layer .desc { color: #444; font-size: 4px; }
+.layer.active { border-color: var(--gold); background: rgba(255,215,61,0.08); }
+
+#log {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 7px;
+    color: #6a6a8a;
+    line-height: 1.3;
+    min-height: 30px;
+    max-height: 60px;
+    background: #06060a;
+    border-radius: 4px;
+    padding: 3px 5px;
+}
+#log .entry { padding: 1px 0; border-bottom: 1px solid #0a0a12; }
+#log .time { color: #444; }
+#log .msg.meta { color: var(--meta); }
+#log .msg.fix { color: var(--fix); }
+#log .msg.nc { color: var(--nc); }
+#log .msg.opta { color: var(--opta); }
+#log .msg.ultra { color: var(--ultra); }
+#log .msg.root { color: var(--root); }
+
+#metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+.metric {
+    background: #0e0e1a;
+    border-radius: 3px;
+    padding: 2px 3px;
+    text-align: center;
+    border: 1px solid #1a1a2a;
+}
+.metric .label { color: #666; font-size: 5px; text-transform: uppercase; }
+.metric .value { font-size: 9px; font-weight: bold; }
+.metric.meta .value { color: var(--meta); }
+.metric.fix .value { color: var(--fix); }
+.metric.nc .value { color: var(--nc); }
+.metric.opta .value { color: var(--opta); }
+
+#controls {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+}
+button {
+    background: #111;
+    color: var(--fg);
+    border: 1px solid #333;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 8px;
+    transition: all 0.2s;
+}
+button:hover { background: #1a1a2a; border-color: var(--gold); }
+button:active { transform: scale(0.95); }
+button.primary { border-color: var(--gold); color: var(--gold); }
+button.primary:hover { background: var(--gold); color: #000; }
+button.meta { border-color: var(--meta); color: var(--meta); }
+button.meta:hover { background: var(--meta); color: #000; }
+button.fix { border-color: var(--fix); color: var(--fix); }
+button.fix:hover { background: var(--fix); color: #000; }
+button.nc { border-color: var(--nc); color: var(--nc); }
+button.nc:hover { background: var(--nc); color: #000; }
+button.opta { border-color: var(--opta); color: var(--opta); }
+button.opta:hover { background: var(--opta); color: #000; }
+button.danger { border-color: #f44; color: #f44; }
+button.danger:hover { background: #f44; color: #000; }
+
+@media (max-width: 800px) {
+    main { grid-template-columns: 1fr; }
+    #panel { max-height: 180px; }
+    #layers { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
-
 <body>
-<h1>META‑Index – ACTIVE AUTO 3.0 TRUE FULL</h1>
-<p>Scan: U → Q → T → H → B (X/Y ignoriert)</p>
+
+<header>
+    <h1>
+        <span class="master">◈ MASTER</span>
+        <span style="color:#666;">·</span>
+        <span class="meta">META</span>
+        <span style="color:#666;">·</span>
+        <span class="auto">AUTO 3.0</span>
+    </h1>
+    <div id="info-bar">
+        <span id="clock">⏱️ --:--:--</span>
+        <span id="state-display" style="color:var(--gold);">● bereit</span>
+        <span id="cycle-display" style="color:#666;">PI 0</span>
+    </div>
+</header>
+
+<main>
+    <div id="canvas-wrap">
+        <canvas id="masterCanvas"></canvas>
+        <div id="canvas-overlay">
+            <span class="master">◈</span> MASTER-PI · META · FIX · NC · OPTA
+        </div>
+    </div>
+
+    <div id="panel">
+        <h3>◈ MASTER-PI · META-INDEX</h3>
+
+        <div id="layers">
+            <div class="layer active" data-layer="META">
+                <span class="sym">◈</span>
+                <span class="label">META</span>
+                <span class="desc">ME · NCPERIUM</span>
+            </div>
+            <div class="layer" data-layer="FIX">
+                <span class="sym">◆</span>
+                <span class="label">FIX</span>
+                <span class="desc">F4-A/B/C</span>
+            </div>
+            <div class="layer" data-layer="OPTA">
+                <span class="sym">◎</span>
+                <span class="label">OPTA</span>
+                <span class="desc">1·2·3</span>
+            </div>
+        </div>
+
+        <div id="metrics">
+            <div class="metric meta"><div class="label">META</div><div class="value" id="meta-value">0</div></div>
+            <div class="metric fix"><div class="label">FIX</div><div class="value" id="fix-value">0</div></div>
+            <div class="metric nc"><div class="label">NC</div><div class="value" id="nc-value">0</div></div>
+            <div class="metric opta"><div class="label">OPTA</div><div class="value" id="opta-value">0</div></div>
+        </div>
+
+        <div id="log">
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg meta">◈ MASTER-PI · META-INDEX · AUTO 3.0</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg fix">FIX: F4-A · F4-B · F4-C</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg nc">NCPERIUM · ME · OPTA 1/2/3</span></div>
+        </div>
+
+        <div id="controls">
+            <button class="primary" id="btn-start">▶ START</button>
+            <button class="meta" id="btn-meta">◈ META</button>
+            <button class="fix" id="btn-fix">◆ FIX</button>
+            <button class="nc" id="btn-nc">🌀 NC</button>
+            <button class="opta" id="btn-opta">◎ OPTA</button>
+            <button class="danger" id="btn-reset">⟲ RESET</button>
+            <button id="btn-auto">▶ AUTO</button>
+        </div>
+    </div>
+</main>
 
 <script>
-const folders = ["U", "Q", "T", "H", "B"];
-const metaRooms = [
-  "METAh.room",
-  "METAb.room",
-  "METAt.room",
-  "META360.room",
-  "META2.html",
-  "META3.html"
-];
+// ============================================================
+// MASTER-PI · META-INDEX · ACTIVE AUTO 3.0
+// ============================================================
 
-async function scanFolder(folder) {
-  try {
-    const res = await fetch(folder + "/");
-    if (!res.ok) return;
+// --- META-DATEN ---
+var META = {
+    ME: { in: 'ME.in.json', out: 'ME.out.json', score: 'ME-SCORE.json' },
+    NCPERIUM: { in: 'N6-A.in.json', out: 'N6-B.out.json', ready: 'N6-C.ready.json' }
+};
 
-    const html = await res.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const links = [...doc.querySelectorAll("a")];
+// --- FIX-DATEN ---
+var FIX = {
+    F4: { A: 'F4-A.tmp.json', B: 'F4-B.vector.json', C: 'F4-C.empty.json' },
+    tmp: 'tmp.tmp'
+};
 
-    const section = document.createElement("div");
-    section.innerHTML = `<h2>${folder}</h2><ul></ul>`;
-    const ul = section.querySelector("ul");
+// --- OPTA-DATEN ---
+var OPTA = {
+    P1: { core: 'P1-A.core', room: 'P1-B.room', scan: 'P1-C.scan' },
+    P2: { raw: 'P2-A.raw', meta: 'P2-B.meta', ultra: 'P2-C.ultra' },
+    P3: { l64: 'P3-A.64', l81: 'P3-B.81', fix: 'P3-C.fix' }
+};
 
-    links.forEach(link => {
-      const name = link.textContent.trim();
-      if (name !== "../") {
-        const li = document.createElement("li");
-        li.innerHTML = `<a href="${folder}/${link.getAttribute("href")}">${name}</a>`;
-        ul.appendChild(li);
-      }
-    });
+// --- RAUM³.SYSTEM ---
+var RAUM3 = {
+    core: 'h1 + e3 + o6 + o9 + b12 + w128 + nano + atom + rev + win + xarg + ghost + 7sinn',
+    axis: ['X', 'Y', 'Z', 'U', 'V', 'W'],
+    pipe: 'h1 → e3 → o6 → o9 → b12 → win∞'
+};
 
-    document.body.appendChild(section);
-  } catch (e) {}
+// ============================================================
+// CANVAS SETUP
+// ============================================================
+var canvas = document.getElementById('masterCanvas');
+var ctx = canvas.getContext('2d');
+var W, H, cx, cy, radius;
+
+function resizeCanvas() {
+    var wrap = document.getElementById('canvas-wrap');
+    var rect = wrap.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    W = canvas.width; H = canvas.height;
+    cx = W / 2; cy = H / 2;
+    radius = Math.min(W, H) * 0.38;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ============================================================
+// STATE
+// ============================================================
+var state = {
+    running: false,
+    autoMode: false,
+    cycle: 0,
+    t: 0,
+    activeLayer: 'META',
+    metaCount: 0,
+    fixCount: 0,
+    ncCount: 0,
+    optaCount: 0
+};
+
+// ============================================================
+// LOG
+// ============================================================
+function log(msg, type) {
+    var logDiv = document.getElementById('log');
+    var entry = document.createElement('div');
+    entry.className = 'entry';
+    var time = new Date().toLocaleTimeString();
+    var cls = type === 'meta' ? 'meta' : type === 'fix' ? 'fix' :
+              type === 'nc' ? 'nc' : type === 'opta' ? 'opta' :
+              type === 'ultra' ? 'ultra' : type === 'root' ? 'root' : '';
+    entry.innerHTML = '<span class="time">[' + time + ']</span> <span class="msg ' + cls + '">' + msg + '</span>';
+    logDiv.appendChild(entry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+    while (logDiv.children.length > 50) logDiv.removeChild(logDiv.firstChild);
 }
 
-async function scanMeta() {
-  const section = document.createElement("div");
-  section.innerHTML = `<h2>META‑Räume</h2><ul></ul>`;
-  const ul = section.querySelector("ul");
+// ============================================================
+// KERN-FUNKTIONEN
+// ============================================================
 
-  metaRooms.forEach(async room => {
-    try {
-      const res = await fetch(room);
-      if (res.ok) {
-        const li = document.createElement("li");
-        li.innerHTML = `<a href="${room}">${room}</a>`;
-        ul.appendChild(li);
-      }
-    } catch (e) {}
-  });
+function activateLayer(key) {
+    state.activeLayer = key;
+    var els = document.querySelectorAll('.layer');
+    for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.getAttribute('data-layer') === key) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    }
 
-  document.body.appendChild(section);
+    switch(key) {
+        case 'META':
+            state.metaCount++;
+            log('◈ META: ME.in → NCPERIUM → ME.out', 'meta');
+            document.getElementById('meta-value').textContent = state.metaCount;
+            break;
+        case 'FIX':
+            state.fixCount++;
+            var f = ['F4-A', 'F4-B', 'F4-C'];
+            var idx = state.fixCount % f.length;
+            log('◆ FIX: ' + f[idx] + ' · tmp.tmp', 'fix');
+            document.getElementById('fix-value').textContent = state.fixCount;
+            break;
+        case 'OPTA':
+            state.optaCount++;
+            var levels = ['P1 · CORE/ROOM/SCAN', 'P2 · RAW/META/ULTRA', 'P3 · 64/81/FIX'];
+            var idx = state.optaCount % levels.length;
+            log('◎ OPTA: ' + levels[idx], 'opta');
+            document.getElementById('opta-value').textContent = state.optaCount;
+            break;
+    }
 }
 
-folders.forEach(scanFolder);
-scanMeta();
+function ncStep() {
+    state.ncCount++;
+    log('🌀 NCPERIUM: N6-A.in → N6-B.out → N6-C.ready', 'nc');
+    document.getElementById('nc-value').textContent = state.ncCount;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    var grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, W * 0.6);
+    grad.addColorStop(0, '#0a0a1a');
+    grad.addColorStop(1, '#000');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    drawMasterRing();
+    drawMeta();
+    drawFix();
+    drawOpta();
+    drawRAUM3();
+
+    state.t += 0.008;
+    if (state.running) {
+        state.cycle++;
+        if (state.cycle % 25 === 0) {
+            var layers = ['META', 'FIX', 'OPTA'];
+            var idx = Math.floor(Math.random() * layers.length);
+            activateLayer(layers[idx]);
+        }
+        if (state.cycle % 15 === 0) ncStep();
+        document.getElementById('cycle-display').textContent = 'PI ' + state.cycle;
+    }
+
+    requestAnimationFrame(render);
+}
+render();
+
+// ============================================================
+// ZEICHEN-FUNKTIONEN
+// ============================================================
+
+function drawMasterRing() {
+    var r = radius * 0.75;
+
+    ctx.strokeStyle = 'rgba(255,215,61,0.03)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 8]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // PI-Symbol
+    ctx.fillStyle = 'rgba(255,215,61,0.05)';
+    ctx.font = '8px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('◈ MASTER-PI', cx, cy - r * 0.85);
+
+    // 4 Achsen
+    var axes = ['META', 'FIX', 'NC', 'OPTA'];
+    var colors = ['#6b6bff', '#ff6b6b', '#4f4', '#ffd93d'];
+    for (var i = 0; i < 4; i++) {
+        var angle = (i / 4) * Math.PI * 2 + state.t * 0.02;
+        var x = cx + Math.cos(angle) * r * 0.9;
+        var y = cy + Math.sin(angle) * r * 0.9;
+        ctx.fillStyle = colors[i] + '33';
+        ctx.shadowColor = colors[i];
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = colors[i];
+        ctx.font = '5px Consolas';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(axes[i], x, y - 8);
+    }
+}
+
+function drawMeta() {
+    var r = radius * 0.25;
+    var angle = state.t * 0.05;
+
+    // ME.in
+    var x1 = cx + Math.cos(angle) * r * 0.7;
+    var y1 = cy + Math.sin(angle) * r * 0.7;
+    ctx.fillStyle = 'rgba(107,107,255,0.15)';
+    ctx.shadowColor = '#6b6bff';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(x1, y1, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#6b6bff';
+    ctx.font = '4px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('ME.in', x1, y1 - 8);
+
+    // NCPERIUM (Mitte)
+    ctx.fillStyle = 'rgba(107,107,255,0.1)';
+    ctx.shadowColor = '#6b6bff';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.1, cy + r * 0.1, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#6b6bff';
+    ctx.font = '4px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText('NC', cx + r * 0.1 - 4, cy + r * 0.1 + 6);
+
+    // ME.out
+    var x2 = cx + Math.cos(angle + 2) * r * 0.7;
+    var y2 = cy + Math.sin(angle + 2) * r * 0.7;
+    ctx.fillStyle = 'rgba(107,107,255,0.15)';
+    ctx.shadowColor = '#6b6bff';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(x2, y2, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#6b6bff';
+    ctx.font = '4px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText('ME.out', x2 - 6, y2 + 8);
+
+    // Verbindungen
+    ctx.strokeStyle = 'rgba(107,107,255,0.1)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(cx + r * 0.1, cy + r * 0.1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + r * 0.1, cy + r * 0.1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(107,107,255,0.05)';
+    ctx.font = '4px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText('◈ META', cx - 14, cy + r * 0.5 + 4);
+}
+
+function drawFix() {
+    var r = radius * 0.4;
+    var angle = state.t * 0.04;
+
+    // F4-A, F4-B, F4-C
+    var labels = ['F4-A', 'F4-B', 'F4-C'];
+    var colors = ['#ff6b6b', '#ff8c00', '#ffd93d'];
+    for (var i = 0; i < 3; i++) {
+        var a = angle + (i / 3) * Math.PI * 2 + 0.3;
+        var x = cx + Math.cos(a) * r * 0.6;
+        var y = cy + Math.sin(a) * r * 0.6;
+        ctx.fillStyle = colors[i] + '44';
+        ctx.shadowColor = colors[i];
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = colors[i];
+        ctx.font = '4px Consolas';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(labels[i], x, y - 6);
+    }
+
+    // tmp.tmp
+    ctx.fillStyle = 'rgba(255,107,107,0.08)';
+    ctx.shadowColor = '#ff6b6b';
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.2, cy - r * 0.2, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ff6b6b';
+    ctx.font = '3px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('tmp', cx + r * 0.2 - 4, cy - r * 0.2 + 4);
+
+    ctx.fillStyle = 'rgba(255,107,107,0.05)';
+    ctx.font = '4px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText('◆ FIX', cx - 12, cy + r * 0.5 + 4);
+}
+
+function drawOpta() {
+    var r = radius * 0.55;
+    var angle = state.t * 0.03;
+
+    // OPTA 1, 2, 3
+    var labels = ['P1', 'P2', 'P3'];
+    var colors = ['#ffd93d', '#ff8c00', '#ff6b00'];
+    for (var i = 0; i < 3; i++) {
+        var a = angle + (i / 3) * Math.PI * 2 + 0.6;
+        var x = cx + Math.cos(a) * r * 0.6;
+        var y = cy + Math.sin(a) * r * 0.6;
+        ctx.fillStyle = colors[i] + '44';
+        ctx.shadowColor = colors[i];
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = colors[i];
+        ctx.font = '4px Consolas';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(labels[i], x, y - 6);
+    }
+
+    ctx.fillStyle = 'rgba(255,217,61,0.05)';
+    ctx.font = '4px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText('◎ OPTA', cx - 14, cy + r * 0.5 + 4);
+}
+
+function drawRAUM3() {
+    var r = radius * 0.08;
+
+    ctx.fillStyle = 'rgba(108,204,255,0.1)';
+    ctx.shadowColor = '#6cf';
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#6cf';
+    ctx.font = 'bold 8px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('π', cx, cy);
+
+    // RAUM³ Label
+    ctx.fillStyle = 'rgba(108,204,255,0.05)';
+    ctx.font = '3px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText('RAUM³', cx, cy + r + 6);
+}
+
+// ============================================================
+// CONTROLS
+// ============================================================
+document.getElementById('btn-start').onclick = function() {
+    state.running = !state.running;
+    this.textContent = state.running ? '⏸ STOP' : '▶ START';
+    document.getElementById('state-display').textContent = state.running ? '● läuft' : '● gestoppt';
+    document.getElementById('state-display').style.color = state.running ? 'var(--gold)' : '#666';
+    log(state.running ? '▶ MASTER-PI gestartet' : '⏸ MASTER-PI gestoppt', 'meta');
+};
+
+document.getElementById('btn-meta').onclick = function() { activateLayer('META'); };
+document.getElementById('btn-fix').onclick = function() { activateLayer('FIX'); };
+document.getElementById('btn-nc').onclick = function() { ncStep(); };
+document.getElementById('btn-opta').onclick = function() { activateLayer('OPTA'); };
+
+document.getElementById('btn-reset').onclick = function() {
+    state.running = false;
+    state.cycle = 0;
+    state.t = 0;
+    state.metaCount = 0;
+    state.fixCount = 0;
+    state.ncCount = 0;
+    state.optaCount = 0;
+    document.getElementById('btn-start').textContent = '▶ START';
+    document.getElementById('state-display').textContent = '● reset';
+    document.getElementById('state-display').style.color = '#f44';
+    document.getElementById('cycle-display').textContent = 'PI 0';
+    document.getElementById('meta-value').textContent = '0';
+    document.getElementById('fix-value').textContent = '0';
+    document.getElementById('nc-value').textContent = '0';
+    document.getElementById('opta-value').textContent = '0';
+    var els = document.querySelectorAll('.layer');
+    for (var i = 0; i < els.length; i++) {
+        els[i].classList.remove('active');
+    }
+    document.querySelector('.layer[data-layer="META"]').classList.add('active');
+    log('⟲ RESET — MASTER-PI zurückgesetzt', 'meta');
+};
+
+document.getElementById('btn-auto').onclick = function() {
+    state.autoMode = !state.autoMode;
+    this.textContent = state.autoMode ? '⏸ PAUSE' : '▶ AUTO';
+    if (state.autoMode) {
+        state.running = true;
+        document.getElementById('btn-start').textContent = '⏸ STOP';
+        document.getElementById('state-display').textContent = '● auto';
+        document.getElementById('state-display').style.color = 'var(--gold)';
+        if (window.autoInterval) clearInterval(window.autoInterval);
+        window.autoInterval = setInterval(function() {
+            var layers = ['META', 'FIX', 'OPTA'];
+            var idx = Math.floor(Math.random() * layers.length);
+            activateLayer(layers[idx]);
+            ncStep();
+            log('🔄 ' + layers[idx] + ' · NC=' + state.ncCount, 'meta');
+        }, 3000);
+        log('▶ AUTO · MASTER-PI rotiert', 'meta');
+    } else {
+        clearInterval(window.autoInterval);
+        log('⏸ AUTO pausiert', 'meta');
+    }
+};
+
+// ============================================================
+// LAYER-KLICKS
+// ============================================================
+var layerEls = document.querySelectorAll('.layer');
+for (var i = 0; i < layerEls.length; i++) {
+    layerEls[i].onclick = function() {
+        var key = this.getAttribute('data-layer');
+        activateLayer(key);
+    };
+}
+
+// ============================================================
+// TASTATUR
+// ============================================================
+document.addEventListener('keydown', function(e) {
+    if (e.key === ' ') { e.preventDefault(); document.getElementById('btn-start').click(); }
+    if (e.key === '1') activateLayer('META');
+    if (e.key === '2') activateLayer('FIX');
+    if (e.key === '3') { activateLayer('OPTA'); }
+    if (e.key === '4') ncStep();
+    if (e.key === 'x') document.getElementById('btn-reset').click();
+    if (e.key === 'a') document.getElementById('btn-auto').click();
+});
+
+// ============================================================
+// UHR
+// ============================================================
+function updateClock() {
+    document.getElementById('clock').textContent = '⏱️ ' + new Date().toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+// INIT
+// ============================================================
+log('◈ MASTER-PI · META-INDEX · AUTO 3.0', 'meta');
+log('◈ META: ME · NCPERIUM', 'meta');
+log('◆ FIX: F4-A · F4-B · F4-C · tmp', 'fix');
+log('◎ OPTA: P1 · P2 · P3', 'opta');
+log('⌨️  1=META 2=FIX 3=OPTA 4=NC  x=Reset  a=Auto', 'meta');
+
+setTimeout(function() {
+    state.running = true;
+    document.getElementById('btn-start').textContent = '⏸ STOP';
+    document.getElementById('state-display').textContent = '● läuft';
+    document.getElementById('state-display').style.color = 'var(--gold)';
+    log('▶ MASTER-PI automatisch gestartet · ◈', 'meta');
+}, 500);
 </script>
-
 </body>
 </html>
